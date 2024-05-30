@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"./api"
+	"github.com/cqllum/db2ch/api"
 )
 
 func main() {
