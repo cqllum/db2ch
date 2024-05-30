@@ -1,55 +1,54 @@
 package replication
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 
-	"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type MySQLReplicationService struct {
-	dbConn  *mysql.Conn
-	running bool
+// MySQLConfig represents the MySQL connection configuration
+type MySQLConfig struct {
+	ConnString string `json:"connString"`
 }
 
-func NewMySQLReplicationService(connString string) (*MySQLReplicationService, error) {
-	conn, err := mysql.Dial("tcp", connString)
+// CheckMySQLConnection checks the MySQL connection using the provided connection string
+func CheckMySQLConnection(configFile string) error {
+	// Read the configuration file
+	content, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return nil, err
-	}
-	return &MySQLReplicationService{dbConn: conn, running: false}, nil
-}
-
-func (r *MySQLReplicationService) StartReplication(slotName string) error {
-	if r.running {
-		return nil
+		return fmt.Errorf("failed to read config file: %v", err)
 	}
 
-	// Logic to start replication
-	r.running = true
-	go func() {
-		// Example of streaming replication
-		err := r.streamReplication(slotName)
+	// Parse the JSON configuration
+	var config map[string][]MySQLConfig
+	if err := json.Unmarshal(content, &config); err != nil {
+		return fmt.Errorf("failed to parse config JSON: %v", err)
+	}
+
+	// Get MySQL configurations
+	mysqlConfigs, ok := config["mysql"]
+	if !ok || len(mysqlConfigs) == 0 {
+		return fmt.Errorf("no MySQL configurations found in config file")
+	}
+
+	// Check MySQL connection for each configuration
+	for _, mysqlConfig := range mysqlConfigs {
+		db, err := sql.Open("mysql", mysqlConfig.ConnString)
 		if err != nil {
-			log.Printf("Error in replication stream: %v", err)
-			r.running = false
+			return fmt.Errorf("failed to open MySQL connection: %v", err)
 		}
-	}()
-	return nil
-}
+		defer db.Close()
 
-func (r *MySQLReplicationService) StopReplication() {
-	// Logic to stop replication
-	r.running = false
-}
+		if err := db.Ping(); err != nil {
+			return fmt.Errorf("failed to ping MySQL database: %v", err)
+		}
 
-func (r *MySQLReplicationService) GetStatus() string {
-	if r.running {
-		return "Running"
+		log.Printf("Successfully connected to MySQL database")
 	}
-	return "Stopped"
-}
 
-func (r *MySQLReplicationService) streamReplication(slotName string) error {
-	// Example replication stream handling
 	return nil
 }

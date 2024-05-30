@@ -1,55 +1,54 @@
 package replication
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 
-	mssql "github.com/denisenkom/go-mssqldb"
+	_ "github.com/denisenkom/go-mssqldb"
 )
 
-type MSSQLReplicationService struct {
-    dbConn *mssql.Conn
-    running bool
+// MSSQLConfig represents the MSSQL connection configuration
+type MSSQLConfig struct {
+	ConnString string `json:"connString"`
 }
 
-func NewMSSQLReplicationService(connString string) (*MSSQLReplicationService, error) {
-    conn, err := mssql.Dial("tcp", connString)
-    if err != nil {
-        return nil, err
-    }
-    return &MSSQLReplicationService{dbConn: conn, running: false}, nil
-}
+// CheckMSSQLConnection checks the MSSQL connection using the provided connection string
+func CheckMSSQLConnection(configFile string) error {
+	// Read the configuration file
+	content, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return fmt.Errorf("failed to read config file: %v", err)
+	}
 
-func (r *MSSQLReplicationService) StartReplication(slotName string) error {
-    if r.running {
-        return nil
-    }
+	// Parse the JSON configuration
+	var config map[string][]MSSQLConfig
+	if err := json.Unmarshal(content, &config); err != nil {
+		return fmt.Errorf("failed to parse config JSON: %v", err)
+	}
 
-    // Logic to start replication
-    r.running = true
-    go func() {
-        // Example of streaming replication
-        err := r.streamReplication(slotName)
-        if err != nil {
-            log.Printf("Error in replication stream: %v", err)
-            r.running = false
-        }
-    }()
-    return nil
-}
+	// Get MSSQL configurations
+	mssqlConfigs, ok := config["mssql"]
+	if !ok || len(mssqlConfigs) == 0 {
+		return fmt.Errorf("no MSSQL configurations found in config file")
+	}
 
-func (r *MSSQLReplicationService) StopReplication() {
-    // Logic to stop replication
-    r.running = false
-}
+	// Check MSSQL connection for each configuration
+	for _, mssqlConfig := range mssqlConfigs {
+		db, err := sql.Open("sqlserver", mssqlConfig.ConnString)
+		if err != nil {
+			return fmt.Errorf("failed to open MSSQL connection: %v", err)
+		}
+		defer db.Close()
 
-func (r *MSSQLReplicationService) GetStatus() string {
-    if r.running {
-        return "Running"
-    }
-    return "Stopped"
-}
+		if err := db.Ping(); err != nil {
+			return fmt.Errorf("failed to ping MSSQL database: %v", err)
+		}
 
-func (r *MSSQLReplicationService) streamReplication(slotName string) error {
-    // Example replication stream handling
-    return nil
+		log.Printf("Successfully connected to MSSQL database")
+	}
+
+	return nil
 }
