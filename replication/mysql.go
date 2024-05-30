@@ -9,6 +9,8 @@ import (
 )
 
 func replicateFromMySQL(dbConfig config.DBConfig) {
+	log.Println("test")
+
 	dsn := dbConfig.User + ":" + dbConfig.Password + "@tcp(" + dbConfig.Host + ":" + string(dbConfig.Port) + ")/" + dbConfig.DBName
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

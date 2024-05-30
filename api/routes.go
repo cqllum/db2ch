@@ -6,8 +6,8 @@ import (
 
 func SetupRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/start", StartHandler).Methods("POST")
-	router.HandleFunc("/stop", StopHandler).Methods("POST")
+	router.HandleFunc("/start", StartHandler).Methods("GET")
+	router.HandleFunc("/stop", StopHandler).Methods("GET")
 	router.HandleFunc("/status", StatusHandler).Methods("GET")
 	return router
 }
