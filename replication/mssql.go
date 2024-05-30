@@ -2,53 +2,18 @@ package replication
 
 import (
 	"database/sql"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
 
+	"github.com/cqllum/db2ch/config"
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
-// MSSQLConfig represents the MSSQL connection configuration
-type MSSQLConfig struct {
-	ConnString string `json:"connString"`
-}
-
-// CheckMSSQLConnection checks the MSSQL connection using the provided connection string
-func CheckMSSQLConnection(configFile string) error {
-	// Read the configuration file
-	content, err := ioutil.ReadFile(configFile)
+func replicateFromMSSQL(dbConfig config.DBConfig) {
+	dsn := "sqlserver://" + dbConfig.User + ":" + dbConfig.Password + "@" + dbConfig.Host + ":" + string(dbConfig.Port) + "?database=" + dbConfig.DBName
+	db, err := sql.Open("sqlserver", dsn)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %v", err)
+		log.Fatal(err)
 	}
-
-	// Parse the JSON configuration
-	var config map[string][]MSSQLConfig
-	if err := json.Unmarshal(content, &config); err != nil {
-		return fmt.Errorf("failed to parse config JSON: %v", err)
-	}
-
-	// Get MSSQL configurations
-	mssqlConfigs, ok := config["mssql"]
-	if !ok || len(mssqlConfigs) == 0 {
-		return fmt.Errorf("no MSSQL configurations found in config file")
-	}
-
-	// Check MSSQL connection for each configuration
-	for _, mssqlConfig := range mssqlConfigs {
-		db, err := sql.Open("sqlserver", mssqlConfig.ConnString)
-		if err != nil {
-			return fmt.Errorf("failed to open MSSQL connection: %v", err)
-		}
-		defer db.Close()
-
-		if err := db.Ping(); err != nil {
-			return fmt.Errorf("failed to ping MSSQL database: %v", err)
-		}
-
-		log.Printf("Successfully connected to MSSQL database")
-	}
-
-	return nil
+	defer db.Close()
+	// Add logic to capture changes and use dbConfig.ColumnMappings
 }
