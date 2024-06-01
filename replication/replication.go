@@ -1,9 +1,15 @@
 package replication
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/cqllum/db2ch/config"
 )
@@ -16,22 +22,50 @@ var (
 // ReplicationService simulates replication service with database credentials
 func ReplicationInit(dbType string, dbConfig config.DBConfig) error {
 	// Parse values from dbConfig
+	name := dbConfig.Name
+	host := dbConfig.Host
+	port := dbConfig.Port
 	user := dbConfig.User
 	password := dbConfig.Password
 	dbName := dbConfig.DBName
 
-	log.Printf("Replicating data for %s using credentials:\nUser: %s\nPassword: %s\nDBName: %s\n",
-		dbType, user, password, dbName)
+	lockFilePath := filepath.Join(".", name+".lock")
 
-	switch strings.ToLower(dbType) {
-	case "mysql":
-		log.Println("ok")
-	case "postgresql":
-		log.Println("ok")
-	case "mssql":
-		log.Println("ok")
-	default:
-		log.Println("f")
+	if _, err := os.Stat(lockFilePath); os.IsNotExist(err) {
+		// Lock file doesn't exist, create it
+		err := ioutil.WriteFile(lockFilePath, []byte{}, 0644)
+		if err != nil {
+			log.Fatalf("Error creating lock file: %v", err)
+		}
+		fmt.Println("Lock file created successfully.")
+
+		stop := make(chan struct{})
+
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			<-sigCh
+			log.Println("Received termination signal")
+			close(stop) // Close the stop channel to signal the MySQL replication service to stop
+		}()
+
+		switch strings.ToLower(dbType) {
+		case "mysql":
+			log.Println("start mysql stuff")
+			go MySQLReplicationService(name, host, int(port), user, password, dbName, stop)
+		case "postgresql":
+			log.Println("start psql stuff")
+		case "mssql":
+			log.Println("start mssql stuff")
+		default:
+			log.Println("nope")
+		}
+
+	} else {
+		// Lock file already exists, indicate that the database is locked
+		fmt.Println("Database is locked by another process.")
+		return nil
 	}
 
 	return nil

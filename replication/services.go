@@ -10,50 +10,17 @@ type ReplicationService interface {
 	Stop() error
 }
 
-// MySQLReplicationService is a service for MySQL replication.
-type MySQLReplicationService struct {
-	ConnString string
-}
-
-// NewMySQLReplicationService creates a new MySQLReplicationService.
-func NewMySQLReplicationService(connString string) *MySQLReplicationService {
-	return &MySQLReplicationService{ConnString: connString}
-}
-
 // Start starts the MySQL replication service.
-func (s *MySQLReplicationService) Start() error {
-	log.Printf("Starting MySQL replication with connection string: %s", s.ConnString)
-	// Implement replication logic here
-	return nil
-}
+func MySQLReplicationService(name string, host string, port int, user string, password string, dbName string, stop chan struct{}) error {
 
-// Stop stops the MySQL replication service.
-func (s *MySQLReplicationService) Stop() error {
-	log.Printf("Stopping MySQL replication with connection string: %s", s.ConnString)
-	// Implement stopping logic here
-	return nil
-}
+	// Check if the database credentials work
+	db, err := MySQLConnector(name, host, port, user, password)
+	if err != nil {
+		log.Printf("Error connecting to MySQL: %v", err)
+		return err
+	}
+	defer db.Close()
 
-// MSSQLReplicationService is a service for MSSQL replication.
-type MSSQLReplicationService struct {
-	ConnString string
-}
-
-// NewMSSQLReplicationService creates a new MSSQLReplicationService.
-func NewMSSQLReplicationService(connString string) *MSSQLReplicationService {
-	return &MSSQLReplicationService{ConnString: connString}
-}
-
-// Start starts the MSSQL replication service.
-func (s *MSSQLReplicationService) Start() error {
-	log.Printf("Starting MSSQL replication with connection string: %s", s.ConnString)
-	// Implement replication logic here
-	return nil
-}
-
-// Stop stops the MSSQL replication service.
-func (s *MSSQLReplicationService) Stop() error {
-	log.Printf("Stopping MSSQL replication with connection string: %s", s.ConnString)
-	// Implement stopping logic here
+	MySQLStartReplicator(name, host, uint16(port), user, password)
 	return nil
 }
