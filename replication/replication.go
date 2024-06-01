@@ -15,15 +15,17 @@ var (
 func StartReplication() {
 	mu.Lock()
 	defer mu.Unlock()
-	if running {
-		log.Println("Replication is already running")
-		return
-	}
+	// if running {
+	// 	log.Println("Replication is already running@!")
+	// 	return
+	// }
 	running = true
 	log.Println("Starting replication...")
 
 	for _, dbConfig := range config.AppConfig.MySQL {
-		go replicateFromMySQL(dbConfig)
+
+		log.Println(dbConfig)
+		//go replicateFromMySQL(dbConfig)
 
 	}
 
