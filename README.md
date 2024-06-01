@@ -1,5 +1,7 @@
 ![db2ch](https://i.imgur.com/Vq4PBVd.png)
 
+### VERSION 0.0 - Not available for Production - POC Development
+
 ## ⚠️Warning
 `db2ch` is still under heavy development. We reccommend that you not try to use it for production use until development has progressed more and bugs are less likely to occur.
 
