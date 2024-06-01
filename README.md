@@ -1,5 +1,7 @@
 ![db2ch](https://i.imgur.com/Vq4PBVd.png)
 
+## ⚠️Warning
+`db2ch` is still under heavy development. We reccommend that you not try to use it for production use until development has progressed more and bugs are less likely to occur.
 
 # db2ch
 
@@ -14,12 +16,14 @@
 - **Control and Monitor**: HTTP APIs for controlling and monitoring replication processes.
 - **Automatic Table Creation**: `db2ch` will automatically map source data types to Clickhouse data types and create tables.
 - **Primary Key Based Backfill Capability**: `db2ch` also includes a capability to perform a backfil to bring across historic data.
+- **Column Control**: `db2ch` replication allows you to control which columns you bring across.
 
 ## Project Structure
 ```
 db2ch/
 ├── main.go
 ├── config/
+│ ├── config.go
 │ ├── config.json
 ├── api/
 │ ├── handler.go
@@ -51,10 +55,4 @@ db2ch/
     ```sh
     git clone https://github.com/cqllum/db2ch.git
     cd db2ch
-    ```
-
-2. Install dependencies:
-
-    ```sh
-    go mod tidy
     ```
