@@ -16,11 +16,15 @@ type DBConfig struct {
 	ColumnMappings map[string]string `json:"column_mappings"`
 }
 
-type Config struct {
+type Databases struct {
 	PostgreSQL []DBConfig `json:"postgresql"`
 	MySQL      []DBConfig `json:"mysql"`
 	MSSQL      []DBConfig `json:"mssql"`
-	ClickHouse DBConfig   `json:"clickhouse"`
+}
+
+type Config struct {
+	Databases  Databases `json:"databases"`
+	ClickHouse DBConfig  `json:"clickhouse"`
 }
 
 var AppConfig Config

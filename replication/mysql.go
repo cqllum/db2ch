@@ -8,6 +8,29 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+/*
+* Composed of several layers
+
+[ Replication Slots ]
+Get Replication Status
+Create Replication Slot
+Delete Replication Slot
+
+[ Publication ]
+Get Publication Status
+Create Publication
+Delete Publication
+
+[ Table Publication ]
+Get Publication Tables
+Add Table to Publication
+Remove Table to Publication
+
+
+Remove Publication
+
+*/
+
 func replicateFromMySQL(dbConfig config.DBConfig) {
 	log.Println("test")
 
